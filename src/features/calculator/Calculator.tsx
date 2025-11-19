@@ -1,4 +1,5 @@
-import { FormEvent, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
 import {
   calculateTotals,
   REGION_TAX_RATES,
@@ -113,11 +114,11 @@ export const Calculator = () => {
     const priceValue = Number(form.pricePerItem)
 
     if (!Number.isFinite(quantityValue) || quantityValue <= 0) {
-      nextErrors.quantity = 'Quantity must be a positive number.'
+      nextErrors.quantity = 'Enter a quantity greater than zero.'
     }
 
     if (!Number.isFinite(priceValue) || priceValue <= 0) {
-      nextErrors.pricePerItem = 'Price must be a positive number.'
+      nextErrors.pricePerItem = 'Enter a positive price per item.'
     }
 
     if (!form.region) {
