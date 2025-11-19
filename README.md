@@ -33,4 +33,4 @@ The dev server runs on <http://localhost:5173>. See the Vite output for network 
 
 - Flesh out the calculator domain logic with unit tests.
 - Build the UI slices for inputs, validation, and results.
-- Capture reasoning/slice notes under `docs/` (planned for future task).
+- Capture reasoning/slice notes under `docs/notes.md` (checklist of slices, decisions, next steps).
