@@ -13,10 +13,46 @@ type FormState = {
 
 type FormErrors = Partial<Record<keyof FormState, string>>
 
-const initialFormState: FormState = {
-  quantity: '',
-  pricePerItem: '',
-  region: '',
+const FORM_STORAGE_KEY = 'retail-calculator:form'
+
+const emptyForm: FormState = { quantity: '', pricePerItem: '', region: '' }
+
+const loadFormState = (): FormState => {
+  if (typeof window === 'undefined') return emptyForm
+  try {
+    const stored = window.localStorage.getItem(FORM_STORAGE_KEY)
+    if (!stored) return emptyForm
+    const parsed = JSON.parse(stored) as Partial<FormState>
+    return {
+      quantity: parsed.quantity ?? '',
+      pricePerItem: parsed.pricePerItem ?? '',
+      region: parsed.region ?? '',
+    }
+  } catch {
+    return emptyForm
+  }
+}
+
+const persistFormState = (state: FormState) => {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(state))
+  } catch {
+    // ignore quota or access issues
+  }
+}
+
+const deriveResultFromState = (state: FormState): CalculationResult | null => {
+  if (!state.quantity || !state.pricePerItem || !state.region) return null
+  try {
+    return calculateTotals({
+      quantity: Number(state.quantity),
+      pricePerItem: Number(state.pricePerItem),
+      region: state.region,
+    })
+  } catch {
+    return null
+  }
 }
 
 const formatCurrency = (value: number) =>
@@ -44,9 +80,12 @@ const ResultCard = ({
 )
 
 export const Calculator = () => {
+  const initialFormState = useMemo(() => loadFormState(), [])
   const [form, setForm] = useState<FormState>(initialFormState)
   const [errors, setErrors] = useState<FormErrors>({})
-  const [result, setResult] = useState<CalculationResult | null>(null)
+  const [result, setResult] = useState<CalculationResult | null>(() =>
+    deriveResultFromState(initialFormState),
+  )
   const [globalError, setGlobalError] = useState<string | null>(null)
 
   const regionOptions = useMemo(
@@ -59,7 +98,11 @@ export const Calculator = () => {
   )
 
   const handleChange = (field: keyof FormState) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }))
+    setForm((prev) => {
+      const next = { ...prev, [field]: event.target.value }
+      persistFormState(next)
+      return next
+    })
     setErrors((prev) => ({ ...prev, [field]: undefined }))
     setGlobalError(null)
   }
